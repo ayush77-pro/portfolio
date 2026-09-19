@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ayush Mishra — AI Developer &amp; Python Engineer</title>
+<meta name="description" content="Portfolio of Ayush Mishra, AI Developer and Python Engineer specializing in NLP, machine learning, and agentic systems.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1E1E1E;
+    --panel:#252526;
+    --titlebar:#323233;
+    --hover:#2A2D2E;
+    --border:#3C3C3C;
+    --text:#D4D4D4;
+    --dim:#858585;
+    --dimmer:#5A5A5A;
+
+    --cm:#6A9955;    /* comment */
+    --str:#CE9178;   /* string */
+    --kw:#569CD6;    /* keyword */
+    --type:#4EC9B0;  /* class / type */
+    --fn:#DCDCAA;    /* function / attr name */
+    --nm:#B5CEA8;    /* number */
+    --var:#9CDCFE;   /* variable */
+    --link:#3B9EFF;  /* accent blue, VS Code status-bar blue */
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important; scroll-behavior:auto !important;}
+  }
+
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', -apple-system, "Segoe UI", sans-serif;
+    font-size:15px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:var(--link);}
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:1px solid var(--link); outline-offset:2px;
+  }
+
+  code, pre, .mono{ font-family:'JetBrains Mono', monospace; }
+
+  /* ================= APP SHELL ================= */
+  .ide{ display:flex; flex-direction:column; min-height:100vh; }
+
+  /* ---- title bar ---- */
+  .titlebar{
+    background:var(--titlebar);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 12px;
+    height:40px;
+    position:sticky; top:0; z-index:40;
+  }
+  .tabs{ display:flex; height:100%; }
+  .tab{
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono', monospace; font-size:12.5px; color:var(--text);
+    padding:0 14px; height:100%;
+    background:var(--bg);
+    border-right:1px solid var(--border);
+  }
+  .tab .dot{ width:6px; height:6px; border-radius:50%; background:var(--type); flex-shrink:0; }
+  .run-all-btn{
+    font-family:'JetBrains Mono', monospace; font-size:12px;
+    background:transparent; color:var(--dim); border:1px solid var(--border);
+    padding:5px 12px; border-radius:2px; cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+    transition:border-color 0.15s ease, color 0.15s ease;
+  }
+  .run-all-btn:hover{ border-color:var(--link); color:var(--link); }
+
+  /* ---- body: sidebar + notebook ---- */
+  .ide-body{ display:flex; flex:1; }
+
+  .sidebar{
+    width:220px; flex-shrink:0;
+    background:var(--panel);
+    border-right:1px solid var(--border);
+    padding:22px 0;
+    position:sticky; top:40px; align-self:flex-start;
+    height:calc(100vh - 40px);
+    overflow-y:auto;
+  }
+  .sidebar-title{
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.04em;
+    color:var(--dimmer); padding:0 20px; margin-bottom:8px;
+  }
+  .sidebar ul{ list-style:none; margin-bottom:26px; }
+  .sidebar a{
+    display:flex; align-items:center; gap:8px;
+    color:var(--dim); text-decoration:none; font-size:13.5px;
+    padding:6px 20px; border-left:2px solid transparent;
+    font-family:'JetBrains Mono', monospace;
+    transition:color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .sidebar a::before{ content:"◦"; color:var(--dimmer); font-size:11px; }
+  .sidebar a:hover{ background:var(--hover); color:var(--text); }
+  .sidebar a.active{ color:var(--text); border-left-color:var(--link); background:var(--hover); }
+  .sidebar a.active::before{ content:"●"; color:var(--link); }
+  .sidebar-links a{ font-family:'Inter', sans-serif; }
+  .sidebar-links a::before{ content:none; }
+
+  @media (max-width:820px){
+    .sidebar{
+      position:sticky; top:40px; height:auto; width:100%;
+      display:flex; overflow-x:auto; padding:10px 8px; gap:4px;
+      border-right:none; border-bottom:1px solid var(--border);
+    }
+    .sidebar-title, .sidebar-links{ display:none; }
+    .sidebar ul{ display:flex; gap:4px; margin-bottom:0; }
+    .sidebar a{ padding:8px 12px; border-left:none; border-bottom:2px solid transparent; white-space:nowrap; }
+    .sidebar a.active{ border-left-color:transparent; border-bottom-color:var(--link); }
+  }
+
+  .notebook{ flex:1; min-width:0; max-width:840px; padding:36px 40px 100px; }
+  @media (max-width:600px){ .notebook{ padding:24px 18px 80px; } }
+
+  /* ---- status bar ---- */
+  .statusbar{
+    background:var(--link); color:#0A2540;
+    display:flex; align-items:center; gap:18px;
+    font-family:'JetBrains Mono', monospace; font-size:11.5px;
+    padding:5px 16px;
+    position:sticky; bottom:0; z-index:40;
+  }
+  .statusbar span{ display:flex; align-items:center; gap:5px; }
+  .status-mid{ flex:1; opacity:0.9; }
+  @media (max-width:600px){ .statusbar span:not(.status-mid):not(.status-user){ display:none; } }
+
+  /* ================= CELLS ================= */
+  .cell{
+    display:grid; grid-template-columns:56px 1fr; gap:4px;
+    margin-bottom:6px; scroll-margin-top:56px;
+  }
+  .cell-gutter{
+    text-align:right; padding-top:2px; position:relative;
+  }
+  .exec{
+    font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--dimmer);
+    display:block;
+  }
+  .cell.ran .exec{ color:var(--dim); }
+  .run-btn{
+    background:none; border:none; color:var(--dimmer); cursor:pointer;
+    font-size:11px; padding:2px 4px; opacity:0; transition:opacity 0.15s ease, color 0.15s ease;
+  }
+  .cell:hover .run-btn{ opacity:1; }
+  .run-btn:hover{ color:var(--link); }
+
+  .cell-content{ padding:10px 0 26px; border-bottom:1px solid transparent; }
+  .cell.code .cell-content{ background:var(--panel); border:1px solid var(--border); padding:16px 18px; border-radius:2px; }
+  .cell.markdown .cell-content{ padding:14px 0 30px; }
+
+  /* markdown cell typography */
+  .cell.markdown h1{
+    font-family:'Source Serif 4', serif; font-weight:600; font-size:40px;
+    color:#fff; margin-bottom:6px; line-height:1.15;
+  }
+  .cell.markdown h2{
+    font-family:'Source Serif 4', serif; font-weight:600; font-size:24px;
+    color:#fff; margin-bottom:14px;
+  }
+  .cell.markdown p{
+    font-family:'Source Serif 4', serif; font-size:16.5px; color:var(--text);
+    max-width:62ch; margin-bottom:14px;
+  }
+  .cell.markdown .role{
+    font-family:'JetBrains Mono', monospace; font-size:13.5px; color:var(--type);
+    margin-bottom:18px;
+  }
+  .cell.markdown a{ text-decoration:underline; text-underline-offset:2px; }
+
+  /* code block token colors */
+  .code-block{ white-space:pre-wrap; word-break:break-word; font-size:13.5px; line-height:1.75; color:var(--text); }
+  .kw{color:var(--kw);}
+  .str{color:var(--str);}
+  .cls{color:var(--type);}
+  .fn{color:var(--fn);}
+  .nm{color:var(--nm);}
+  .vr{color:var(--var);}
+  .cm{color:var(--cm);}
+
+  .out-block{ margin-top:14px; padding-top:14px; border-top:1px dashed var(--border); }
+  .out-label{ font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--dimmer); display:block; margin-bottom:8px; }
+  .out-block pre, .out-block .code-block{ font-size:13.5px; color:var(--text); }
+
+  /* skills output styling */
+  .skill-out-group{ margin-bottom:12px; }
+  .skill-out-group:last-child{ margin-bottom:0; }
+  .skill-out-key{ color:var(--var); }
+  .skill-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .skill-tag{
+    font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--str);
+    background:rgba(206,145,120,0.08); border:1px solid rgba(206,145,120,0.25);
+    padding:3px 9px; border-radius:2px;
+  }
+
+  /* projects output styling */
+  .proj-out{ margin-bottom:22px; }
+  .proj-out:last-child{ margin-bottom:0; }
+  .proj-out .pname{ color:var(--type); font-family:'JetBrains Mono', monospace; font-size:14px; font-weight:600; }
+  .proj-out .pstack{ color:var(--dim); font-family:'JetBrains Mono', monospace; font-size:12px; margin-left:8px; }
+  .proj-out .psummary{ color:var(--text); font-size:13.5px; margin:6px 0 8px; max-width:64ch; }
+  .proj-out .plinks{ display:flex; gap:16px; flex-wrap:wrap; }
+  .proj-out .plinks a{ font-family:'JetBrains Mono', monospace; font-size:12.5px; margin-right:16px; display:inline-block; }
+  .proj-out .plinks .pkey{ color:var(--dimmer); }
+
+  /* contact terminal */
+  .terminal-prompt{ font-family:'JetBrains Mono', monospace; font-size:13.5px; }
+  .prompt-line{ display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .prompt-sym{ color:var(--kw); flex-shrink:0; }
+  .prompt-label{ color:var(--text); white-space:nowrap; }
+  .prompt-label .str{ color:var(--str); }
+  .terminal-prompt input[type="text"], .terminal-prompt input[type="email"]{
+    background:var(--bg); border:1px solid var(--border); color:var(--var);
+    font-family:'JetBrains Mono', monospace; font-size:13.5px;
+    padding:6px 10px; border-radius:2px; flex:1; min-width:160px;
+  }
+  .terminal-prompt input:focus, .terminal-prompt textarea:focus{ border-color:var(--link); }
+  .triple-quote{ color:var(--str); display:block; margin:4px 0; }
+  .terminal-prompt textarea{
+    width:100%; background:var(--bg); border:1px solid var(--border); color:var(--var);
+    font-family:'JetBrains Mono', monospace; font-size:13.5px;
+    padding:10px; border-radius:2px; min-height:90px; resize:vertical; margin-bottom:4px;
+  }
+  .send-btn{
+    font-family:'JetBrains Mono', monospace; font-size:13.5px;
+    background:transparent; color:var(--type); border:1px solid var(--type);
+    padding:9px 18px; border-radius:2px; cursor:pointer; margin-top:10px;
+    transition:background 0.15s ease, color 0.15s ease;
+  }
+  .send-btn:hover{ background:var(--type); color:#0A2540; }
+  .form-note{ font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--dimmer); margin-top:10px; display:block; }
+
+  /* reveal on execution */
+  .cell .exec-hidden{ opacity:0; transition:opacity 0.3s ease; }
+  .cell.ran .exec-hidden{ opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="ide">
+
+  <div class="titlebar">
+    <div class="tabs">
+      <div class="tab"><span class="dot"></span>portfolio.ipynb</div>
+    </div>
+    <button class="run-all-btn" id="runAllBtn">▸ Run All Cells</button>
+  </div>
+
+  <div class="ide-body">
+    <nav class="sidebar">
+      <div class="sidebar-title">EXPLORER</div>
+      <ul>
+        <li><a href="#about" data-target="about" class="active">About.md</a></li>
+        <li><a href="#skills" data-target="skills">Skills.py</a></li>
+        <li><a href="#projects" data-target="projects">Projects.py</a></li>
+        <li><a href="#contact" data-target="contact">Contact.md</a></li>
+      </ul>
+      <div class="sidebar-title">LINKS</div>
+      <ul class="sidebar-links">
+        <li><a href="mailto:am8172689@gmail.com">Email</a></li>
+        <li><a href="tel:+918510885715">Phone</a></li>
+        <li><a href="https://www.linkedin.com/in/ayush-mishra-53bb99311" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+        <li><a href="https://github.com/ayush77-pro" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+      </ul>
+    </nav>
+
+    <main class="notebook">
+
+      <!-- Cell 1: intro -->
+      <section class="cell markdown" id="about" data-section="about">
+        <div class="cell-gutter"><span class="exec mono">[ ]</span><button class="run-btn" aria-label="Run cell">▸</button></div>
+        <div class="cell-content">
+          <h1>Ayush Mishra</h1>
+          <div class="role">AI Developer &amp; Python Engineer</div>
+          <p>I'm a final-year B.Tech student in Artificial Intelligence &amp; Data Science, based in Ghaziabad, Uttar Pradesh. I build NLP-driven ranking systems and agentic assistants — from semantic search over resumes to voice-controlled automation.</p>
+          <p>Reach me at <a href="mailto:am8172689@gmail.com">am8172689@gmail.com</a>, or find the code at <a href="https://github.com/ayush77-pro" target="_blank" rel="noopener noreferrer">github.com/ayush77-pro</a>.</p>
+        </div>
+      </section>
+
+      <!-- Cell 2: profile as code -->
+      <section class="cell code" data-section="about">
+        <div class="cell-gutter"><span class="exec mono">[ ]</span><button class="run-btn" aria-label="Run cell">▸</button></div>
+        <div class="cell-content">
+<pre class="code-block"><span class="kw">class</span> <span class="cls">AyushMishra</span>:
+    <span class="fn">role</span> = <span class="str">"AI Developer & Python Engineer"</span>
+    <span class="fn">location</span> = <span class="str">"Ghaziabad, Uttar Pradesh, IN"</span>
+    <span class="fn">education</span> = <span class="str">"B.Tech, AI & Data Science — Maharishi University"</span>
+    <span class="fn">timeline</span> = (<span class="nm">2023</span>, <span class="nm">2027</span>)
+    <span class="fn">focus</span> = [<span class="str">"NLP"</span>, <span class="str">"ranking systems"</span>, <span class="str">"agentic AI"</span>]
+    <span class="fn">open_to</span> = <span class="str">"internships, entry-level AI/ML roles"</span></pre>
+          <div class="out-block">
+            <span class="out-label">Out[2]:</span>
+<pre class="code-block"><span class="kw">&lt;</span><span class="cls">AyushMishra</span> focus=<span class="str">'NLP, ranking systems, agentic AI'</span> open_to=<span class="str">'internships, entry-level AI/ML roles'</span><span class="kw">&gt;</span></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cell 3: skills -->
+      <section class="cell markdown" id="skills" data-section="skills" style="margin-top:24px;">
+        <div class="cell-gutter"><span class="exec mono">[ ]</span><button class="run-btn" aria-label="Run cell">▸</button></div>
+        <div class="cell-content"><h2>Skills</h2></div>
+      </section>
+
+      <section class="cell code" data-section="skills">
+        <div class="cell-gutter"><span class="exec mono">[ ]</span><button class="run-btn" aria-label="Run cell">▸</button></div>
+        <div class="cell-content">
+<pre class="code-block"><span class="vr">skills</span> = {
+    <span class="str">"languages"</span>: [<span class="str">"Python"</span>, <span class="str">"SQL"</span>, <span class="str">"HTML"</span>, <span class="str">"C++"</span>],
+    <span class="str">"libraries"</span>: [<span class="str">"NumPy"</span>, <span class="str">"Pandas"</span>],
+    <span class="str">"tools"</span>: [<span class="str">"Git"</span>, <span class="str">"GitHub"</span>, <span class="str">"VS Code"</span>, <span class="str">"Jupyter Notebook"</span>],
+    <span class="str">"soft_skills"</span>: [<span class="str">"Team work"</span>, <span class="str">"Adaptability"</span>, <span class="str">"Time management"</span>],
+}
+
+<span class="cm"># certified — upGrad</span>
+<span class="vr">certifications</span> = [
+    <span class="str">"Python for ML & Visualization"</span>, <span class="str">"SQL"</span>, <span class="str">"Data Structures"</span>,
+    <span class="str">"Fundamentals of Programming"</span>, <span class="str">"Machine Learning"</span>,
+]</pre>
+          <div class="out-block">
+            <span class="out-label">Out[4]:</span>
+            <div class="skill-out-group">
+              <span class="skill-out-key">languages</span>
+              <div class="skill-tags">
+                <span class="skill-tag">Python</span><span class="skill-tag">SQL</span><span class="skill-tag">HTML</span><span class="skill-tag">C++</span>
+              </div>
+            </div>
+            <div class="skill-out-group">
+              <span class="skill-out-key">libraries</span>
+              <div class="skill-tags"><span class="skill-tag">NumPy</span><span class="skill-tag">Pandas</span></div>
+            </div>
+            <div class="skill-out-group">
+              <span class="skill-out-key">tools</span>
+              <div class="skill-tags"><span class="skill-tag">Git</span><span class="skill-tag">GitHub</span><span class="skill-tag">VS Code</span><span class="skill-tag">Jupyter Notebook</span></div>
+            </div>
+            <div class="skill-out-group">
+              <span class="skill-out-key">soft_skills</span>
+              <div class="skill-tags"><span class="skill-tag">Team work</span><span class="skill-tag">Adaptability</span><span class="skill-tag">Time management</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cell 4: projects -->
+      <section class="cell markdown" id="projects" data-section="projects" style="margin-top:24px;">
+        <div class="cell-gutter"><span class="exec mono">[ ]</span><button class="run-btn" aria-label="Run cell">▸</button></div>
+        <div class="cell-content"><h2>Projects</h2></div>
+      </section>
+
+      <section class="cell code" data-section="projects">
+        <div class="cell-gutter"><span class="exec mono">[ ]</span><button class="run-btn" aria-label="Run cell">▸</button></div>
+        <div class="cell-content">
+<pre class="code-block"><span class="vr">projects</span> = [
+    {
+        <span class="str">"name"</span>: <span class="str">"HIRER"</span>,
+        <span class="str">"stack"</span>: (<span class="str">"Python"</span>, <span class="str">"NLP"</span>, <span class="str">"Machine Learning"</span>),
+        <span class="str">"summary"</span>: <span class="str">"AI-powered candidate ranking system using semantic</span>
+                    <span class="str">embeddings and behavioral signals for automated screening."</span>,
+    },
+    {
+        <span class="str">"name"</span>: <span class="str">"J.I.N.X"</span>,
+        <span class="str">"stack"</span>: (<span class="str">"Python"</span>, <span class="str">"C++"</span>),
+        <span class="str">"summary"</span>: <span class="str">"Voice-controlled AI desktop assistant with agentic task</span>
+                    <span class="str">automation, built as a modular system for future upgrades."</span>,
+    },
+]</pre>
+          <div class="out-block">
+            <span class="out-label">Out[5]:</span>
+            <div class="proj-out">
+              <span class="pname">HIRER</span><span class="pstack">Python · NLP · Machine Learning</span>
+              <p class="psummary">AI-powered candidate ranking system using semantic embeddings and behavioral signals for automated resume screening and shortlisting.</p>
+              <div class="plinks">
+                <a href="https://hirer-pearl.vercel.app/" target="_blank" rel="noopener noreferrer"><span class="pkey">live:</span> hirer-pearl.vercel.app</a>
+                <a href="https://github.com/Sidvortex/Hirer" target="_blank" rel="noopener noreferrer"><span class="pkey">source:</span> github.com/Sidvortex/Hirer</a>
+              </div>
+            </div>
+            <div class="proj-out">
+              <span class="pname">J.I.N.X</span><span class="pstack">Python · C++</span>
+              <p class="psummary">Voice-controlled AI desktop assistant that responds to commands and automates multi-step tasks through agentic AI integration.</p>
+              <div class="plinks">
+                <a href="https://github.com/ayush77-pro/J.I.N.X" target="_blank" rel="noopener noreferrer"><span class="pkey">source:</span> github.com/ayush77-pro/J.I.N.X</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cell 5: contact -->
+      <section class="cell markdown" id="contact" data-section="contact" style="margin-top:24px;">
+        <div class="cell-gutter"><span class="exec mono">[ ]</span><button class="run-btn" aria-label="Run cell">▸</button></div>
+        <div class="cell-content">
+          <h2>Contact</h2>
+          <p>Open to internships, entry-level AI/ML roles, and interesting collaborations.</p>
+        </div>
+      </section>
+
+      <section class="cell code" data-section="contact">
+        <div class="cell-gutter"><span class="exec mono">[ ]</span><button class="run-btn" aria-label="Run cell">▸</button></div>
+        <div class="cell-content">
+          <form class="terminal-prompt" id="contactForm">
+            <div class="prompt-line">
+              <span class="prompt-sym">&gt;&gt;&gt;</span>
+              <span class="prompt-label">name = input(<span class="str">"Your name: "</span>)</span>
+              <input type="text" id="name" name="name" required>
+            </div>
+            <div class="prompt-line">
+              <span class="prompt-sym">&gt;&gt;&gt;</span>
+              <span class="prompt-label">email = input(<span class="str">"Your email: "</span>)</span>
+              <input type="email" id="email" name="email" required>
+            </div>
+            <span class="triple-quote">message = """</span>
+            <textarea id="message" name="message" required></textarea>
+            <span class="triple-quote">"""</span>
+            <button type="submit" class="send-btn">&gt;&gt;&gt; send()</button>
+            <span class="form-note">Opens your email app — nothing is stored server-side.</span>
+          </form>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="statusbar">
+    <span>⎇ main</span>
+    <span>Python 3.11.4</span>
+    <span class="status-mid" id="statusMid">Viewing: About</span>
+    <span>UTF-8</span>
+    <span class="status-user">ayush77-pro</span>
+  </div>
+
+</div>
+
+<script>
+  // ---- cell execution animation ----
+  function runCell(cell, delay){
+    setTimeout(() => {
+      const execEl = cell.querySelector('.exec');
+      if (!execEl || cell.classList.contains('ran')) return;
+      execEl.textContent = '[*]';
+      setTimeout(() => {
+        window.__execCount = (window.__execCount || 0) + 1;
+        execEl.textContent = '[' + window.__execCount + ']';
+        cell.classList.add('ran');
+      }, 260);
+    }, delay);
+  }
+
+  const cells = Array.from(document.querySelectorAll('.cell'));
+
+  // run-on-scroll, in order, once
+  const seen = new Set();
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !seen.has(entry.target)){
+        seen.add(entry.target);
+        runCell(entry.target, 0);
+      }
+    });
+  }, { threshold: 0.35 });
+  cells.forEach(c => io.observe(c));
+
+  // manual run buttons
+  document.querySelectorAll('.run-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cell = btn.closest('.cell');
+      cell.classList.remove('ran');
+      runCell(cell, 0);
+    });
+  });
+
+  // run-all button replays the whole sequence in order
+  document.getElementById('runAllBtn').addEventListener('click', () => {
+    window.__execCount = 0;
+    cells.forEach(c => c.classList.remove('ran'));
+    cells.forEach((c, i) => runCell(c, i * 180));
+  });
+
+  // ---- sidebar active state + status bar tracking ----
+  const sections = ['about','skills','projects','contact'];
+  const sectionEls = {};
+  sections.forEach(s => { sectionEls[s] = document.querySelectorAll('[data-section="' + s + '"]'); });
+  const sidebarLinks = document.querySelectorAll('.sidebar a[data-target]');
+  const statusMid = document.getElementById('statusMid');
+  const labelMap = { about:'About', skills:'Skills', projects:'Projects', contact:'Contact' };
+
+  const navIo = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting){
+        const section = entry.target.getAttribute('data-section');
+        sidebarLinks.forEach(l => l.classList.toggle('active', l.dataset.target === section));
+        statusMid.textContent = 'Viewing: ' + labelMap[section];
+      }
+    });
+  }, { threshold: 0, rootMargin: '-40% 0px -55% 0px' });
+  cells.forEach(c => navIo.observe(c));
+
+  // ---- contact form -> mailto ----
+  document.getElementById('contactForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const message = document.getElementById('message').value;
+    const subject = encodeURIComponent('Portfolio contact from ' + name);
+    const body = encodeURIComponent(message + '\n\n— ' + name + ' (' + email + ')');
+    window.location.href = 'mailto:am8172689@gmail.com?subject=' + subject + '&body=' + body;
+  });
+</script>
+
+</body>
+</html>
